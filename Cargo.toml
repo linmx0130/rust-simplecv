@@ -3,6 +3,7 @@ name = "simplecv"
 version = "0.1.0"
 authors = ["Mengxiao Lin <linmx0130@gmail.com>"]
 edition = "2018"
+license = "BSD-3-Clause"
 
 [dependencies]
 image = {git="https://github.com/PistonDevelopers/image.git"} 
