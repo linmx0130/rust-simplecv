@@ -7,4 +7,5 @@ extern crate ndarray;
 
 pub mod io;
 pub mod color;
+pub mod filter;
 

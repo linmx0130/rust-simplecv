@@ -1,3 +1,5 @@
+//! Color transformation and enhancement.
+//!
 use ndarray::prelude::{Array, Ix2, Ix3};
 
 /// Transform an RGB image to grayscale image.

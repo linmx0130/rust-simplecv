@@ -1,3 +1,7 @@
+//! Some wrapper functions for image IO operations. 
+//!
+//! Since `simplecv` is based on `ndarray`, these functions use `image` 
+//! crate to read images and store data in `ndarray::Array`.
 use image::*;
 use ndarray::prelude::*;
 
