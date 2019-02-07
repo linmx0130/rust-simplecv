@@ -139,3 +139,79 @@ pub fn filter<S, K>(src: &ArrayBase<S, Ix2>, kernel: &ArrayBase<K, Ix2>, border:
     filter_(src, kernel, border, &mut buffer);
     buffer
 }
+
+/// Generate a Gaussian kernel with the simplest method.
+pub fn gaussian_kernel_generator(ksize: usize) -> Array<f64, Ix2>{
+    fn sqr_dis(dx:i32, dy:i32) -> i32{
+        dx * dx + dy * dy
+    }
+    let cx = (ksize / 2) as i32;
+    let cy = (ksize / 2) as i32;
+    let mut kernel = Array::zeros((ksize, ksize));
+    for x in 0..ksize {
+        for y in 0..ksize{
+            let dist = sqr_dis(cx - x as i32, cy - y as i32);
+            kernel[[x, y]] = -dist as f64 / 2.0;
+        }
+    }
+    kernel.map_inplace(|x| *x = x.exp());
+    let normalized_constant = kernel.fold(0.0, |acc, x| acc + x);
+    kernel /= normalized_constant;
+    kernel
+}
+
+/// Smooth the image with a gaussian kernel.
+///
+/// The output buffer should be allcated by users.
+/// * `ksize`: is the kernel size. 
+/// * `border`: how to deal with the border.
+pub fn gaussian_smooth_<S, T>(src: &ArrayBase<S, Ix2>, ksize:usize, border: BorderType, out:&mut ArrayBase<T, Ix2>) 
+    where S: Data<Elem=f64>, T:DataMut<Elem=f64>
+{
+    let kernel = gaussian_kernel_generator(ksize);
+    filter_(src, &kernel, border, out);
+}
+
+/// Smooth the image with a gaussian kernel.
+///
+/// * `ksize`: is the kernel size. 
+/// * `border`: how to deal with the border.
+pub fn gaussian_smooth<S>(src: &ArrayBase<S, Ix2>, ksize:usize, border: BorderType) -> Array<f64, Ix2>
+    where S: Data<Elem=f64>
+{
+    let kernel = gaussian_kernel_generator(ksize);
+    filter(src, &kernel, border)
+}
+
+/// Smooth the image with a mean kernel.
+///
+/// The output buffer should be allcated by users.
+/// * `ksize`: is the kernel size. 
+/// * `border`: how to deal with the border.
+pub fn mean_smooth_<S, T>(src: &ArrayBase<S, Ix2>, ksize:usize, border:BorderType, out: &mut ArrayBase<T, Ix2>)
+    where S: Data<Elem=f64>, T:DataMut<Elem=f64>
+{
+    let kernel = Array::ones((ksize, ksize)) / ((ksize * ksize) as f64);
+    filter_(src, &kernel, border, out);
+}
+
+/// Smooth the image with a mean kernel.
+///
+/// * `ksize`: is the kernel size. 
+/// * `border`: how to deal with the border.
+///
+/// # Example
+/// ```
+/// let a = ndarray::arr2(&[[0.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]]);
+/// let smoothed = simplecv::filter::mean_smooth(&a, 3,
+///                     simplecv::filter::BorderType::Constant(0.0));
+/// let diff = simplecv::utils::max_diff(&smoothed, &(ndarray::Array::ones((3, 3)) / 9.0));
+/// assert!(diff < 1e-4);
+/// ```
+///
+pub fn mean_smooth<S>(src: &ArrayBase<S, Ix2>, ksize:usize, border:BorderType) -> Array<f64, Ix2>
+    where S: Data<Elem=f64>
+{
+    let kernel = Array::ones((ksize, ksize)) / ((ksize * ksize) as f64);
+    filter(src, &kernel, border)
+}
