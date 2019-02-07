@@ -1,13 +1,16 @@
 //! Color transformation and enhancement.
 //!
-use ndarray::prelude::{Array, Ix2, Ix3};
+use ndarray::prelude::*;
+use ndarray::{Data, DataMut};
 use super::utils::f2u;
 
 /// Transform an RGB image to grayscale image.
 ///
 /// The output buffer is allocated by users.
 /// The weights are 0.299, 0.587 and 0.114 for red, green and blue respectively.
-pub fn rgb2gray_(img: &Array<f64, Ix3>, out: &mut Array<f64, Ix2>) {
+pub fn rgb2gray_<A, B>(img: &ArrayBase<A, Ix3>, out: &mut ArrayBase<B, Ix2>)
+    where A: Data<Elem=f64>, B: DataMut<Elem=f64>
+{
     let shape = img.shape();
     let h = shape[0];
     let w = shape[1];
@@ -39,7 +42,9 @@ pub fn rgb2gray_(img: &Array<f64, Ix3>, out: &mut Array<f64, Ix2>) {
 /// let max_diff_val = simplecv::utils::max_diff(&gray, &ndarray::arr2(&[[0.6605, 0.6251]]));
 /// assert!(max_diff_val < 1e-3);
 /// ```
-pub fn rgb2gray(img: &Array<f64, Ix3>) -> Array<f64, Ix2> {
+pub fn rgb2gray<A>(img: &ArrayBase<A, Ix3>) -> Array<f64, Ix2> 
+    where A:Data<Elem=f64>
+{
     let shape = img.shape();
     let h = shape[0];
     let w = shape[1];
@@ -54,11 +59,15 @@ pub fn rgb2gray(img: &Array<f64, Ix3>) -> Array<f64, Ix2> {
 ///
 /// The output buffer is allocated by users. Implementated following the
 /// OpenCV toturial on [histogram equalization](https://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html)
-pub fn histeq_(img: &Array<f64, Ix2>, out:&mut Array<f64, Ix2>) {
+pub fn histeq_<A, B>(img: &ArrayBase<A, Ix2>, out:&mut ArrayBase<B, Ix2>)
+    where A: Data<Elem=f64>, B:DataMut<Elem=f64>
+{
     let shape = img.shape();
     let h = shape[0] as usize;
     let w = shape[1] as usize;
-    fn hist256cdf(img: &Array<f64, Ix2>) -> [f64; 256]{
+    fn hist256cdf<A>(img: &ArrayBase<A, Ix2>) -> [f64; 256]
+        where A: Data<Elem=f64>
+    {
         let mut hist = [0f64; 256];
         for v in img.iter(){
             hist[f2u(*v) as usize] += 1.0;
@@ -84,7 +93,9 @@ pub fn histeq_(img: &Array<f64, Ix2>, out:&mut Array<f64, Ix2>) {
 ///
 /// Implementated following the OpenCV toturial on 
 /// [histogram equalization](https://docs.opencv.org/3.1.0/d5/daf/tutorial_py_histogram_equalization.html)
-pub fn histeq(img: &Array<f64, Ix2>) -> Array<f64, Ix2> {
+pub fn histeq<A>(img: &ArrayBase<A, Ix2>) -> Array<f64, Ix2> 
+    where A: Data<Elem=f64>
+{
     let shape = img.shape();
     let h = shape[0] as usize;
     let w = shape[1] as usize;

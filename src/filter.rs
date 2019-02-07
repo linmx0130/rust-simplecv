@@ -1,6 +1,7 @@
 //! 2D filters for image processing.
 
 use ndarray::prelude::*;
+use ndarray::{Data, DataMut};
 
 /// Representing the border type for filters.
 ///
@@ -50,7 +51,9 @@ pub fn border_interpolate(p:i32, len:usize, border: BorderType) -> Option<usize>
 /// Get the value of an image at a location which may be outside the image.
 ///
 /// This function is used by `filter`.
-fn access_img_border(src: &Array<f64, Ix2>, x:i32, y:i32, border: BorderType) -> f64 {
+fn access_img_border<S>(src: &ArrayBase<S, Ix2>, x:i32, y:i32, border: BorderType) -> f64 
+    where S:Data<Elem=f64> 
+{
     if x >= 0 && y >= 0 && x < src.shape()[0] as i32 && y < src.shape()[1] as i32 {
         src[[x as usize, y as usize]]
     }
@@ -74,8 +77,10 @@ fn access_img_border(src: &Array<f64, Ix2>, x:i32, y:i32, border: BorderType) ->
 /// The method of dealing with border situation is selected by `border`. By setting
 /// `border=Reflect`, you will get the default result of OpenCV.
 ///
-pub fn filter_(src: &Array<f64, Ix2>, kernel: &Array<f64, Ix2>, border: BorderType, 
-               out:&mut Array<f64, Ix2>) {
+pub fn filter_<S, T, K>(src: &ArrayBase<S, Ix2>, kernel: &ArrayBase<K, Ix2>, border: BorderType, 
+               out:&mut ArrayBase<T, Ix2>)
+    where S: Data<Elem=f64>, T: DataMut<Elem=f64>, K: Data<Elem=f64>
+{
     let kh = kernel.shape()[0];
     let kw = kernel.shape()[1];
     let kcx = (kh / 2) as i32; // kernel center x
@@ -124,7 +129,9 @@ pub fn filter_(src: &Array<f64, Ix2>, kernel: &Array<f64, Ix2>, border: BorderTy
 ///  assert_eq!(target, output);
 /// ```
 ///
-pub fn filter(src: &Array<f64, Ix2>, kernel: &Array<f64, Ix2>, border: BorderType) -> Array<f64, Ix2>{
+pub fn filter<S, K>(src: &ArrayBase<S, Ix2>, kernel: &ArrayBase<K, Ix2>, border: BorderType) -> Array<f64, Ix2>
+    where S: Data<Elem=f64>, K: Data<Elem=f64>
+{
     let shape = src.shape();
     let height = shape[0] as usize;
     let width = shape[1] as usize;

@@ -1,6 +1,6 @@
 //! Collections of some util functions.
 //!
-use ndarray::{ArrayBase, Dimension, OwnedRepr};
+use ndarray::{ArrayBase, Dimension, Data};
 use num::traits::Signed;
 
 /// Compute the max absolute difference of two array.
@@ -16,8 +16,8 @@ use num::traits::Signed;
 /// // due to float computation, the diff may be 0.0199999...
 /// assert!((diff - 0.02).abs() < 1e-5);
 /// ```
-pub fn max_diff<A, D>(a:&ArrayBase<OwnedRepr<A>, D>, b:&ArrayBase<OwnedRepr<A>, D>) -> A
-    where A:Signed + PartialOrd + Copy, D:Dimension,
+pub fn max_diff<A, D, S>(a:&ArrayBase<S, D>, b:&ArrayBase<S, D>) -> A
+    where A:Signed + PartialOrd + Copy, D:Dimension, S: Data<Elem=A>
 {
     a.iter()
      .zip(b.iter())
