@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate ndarray;
 
+pub mod utils;
 pub mod io;
 pub mod color;
 pub mod filter;
-
