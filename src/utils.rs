@@ -34,3 +34,10 @@ pub fn max_diff<A, D, S>(a:&ArrayBase<S, D>, b:&ArrayBase<S, D>) -> A
 pub fn f2u(v: f64) -> u8 {
     (v * 255.0 + 0.5) as u8
 }
+
+/// max of two value
+pub fn max<A>(a: A, b:A) -> A
+    where A: PartialOrd + Copy
+{
+    if a > b {a} else {b}
+}

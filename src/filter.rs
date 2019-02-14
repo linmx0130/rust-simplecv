@@ -162,7 +162,7 @@ pub fn gaussian_kernel_generator(ksize: usize) -> Array<f64, Ix2>{
 
 /// Smooth the image with a gaussian kernel.
 ///
-/// The output buffer should be allcated by users.
+/// The output buffer should be allocated by users.
 /// * `ksize`: is the kernel size. 
 /// * `border`: how to deal with the border.
 pub fn gaussian_smooth_<S, T>(src: &ArrayBase<S, Ix2>, ksize:usize, border: BorderType, out:&mut ArrayBase<T, Ix2>) 
@@ -185,7 +185,7 @@ pub fn gaussian_smooth<S>(src: &ArrayBase<S, Ix2>, ksize:usize, border: BorderTy
 
 /// Smooth the image with a mean kernel.
 ///
-/// The output buffer should be allcated by users.
+/// The output buffer should be allocated by users.
 /// * `ksize`: is the kernel size. 
 /// * `border`: how to deal with the border.
 pub fn mean_smooth_<S, T>(src: &ArrayBase<S, Ix2>, ksize:usize, border:BorderType, out: &mut ArrayBase<T, Ix2>)
@@ -209,9 +209,90 @@ pub fn mean_smooth_<S, T>(src: &ArrayBase<S, Ix2>, ksize:usize, border:BorderTyp
 /// assert!(diff < 1e-4);
 /// ```
 ///
-pub fn mean_smooth<S>(src: &ArrayBase<S, Ix2>, ksize:usize, border:BorderType) -> Array<f64, Ix2>
+pub fn mean_smooth<S>(src: &ArrayBase<S, Ix2>, ksize: usize, border:BorderType) -> Array<f64, Ix2>
     where S: Data<Elem=f64>
 {
     let kernel = Array::ones((ksize, ksize)) / ((ksize * ksize) as f64);
     filter(src, &kernel, border)
+}
+
+/// Sobel operator implementation.
+///
+/// The output buffer should be allocated by users.
+///
+/// When kernel size is 3, the classical Sobel filter is applied. Read 
+/// [OpenCV Sobel()](https://docs.opencv.org/3.4/d4/d86/group__imgproc__filter.html#gacea54f142e81b6758cb6f375ce782c8d)
+/// for more details. Only `dx=1, dy=0` and `dx=0, dy=1` are supported now.
+///
+/// * `ksize`: the kernel size. Currently, only `ksize=3` is supported.
+/// * `dx`: order of the derivative x.
+/// * `dy`: order of the derivative y.
+/// * `border`: border type.
+pub fn sobel_<S, T>(src: &ArrayBase<S, Ix2>, ksize: usize, dx: u32, dy: u32, border: BorderType, out: &mut ArrayBase<T, Ix2>)
+    where S: Data<Elem=f64>, T: DataMut<Elem=f64>
+{
+    assert!(ksize==3, "Only ksize=3 is supported in sobel_() now.");
+    assert!(dx + dy == 1, "Only first order gradient of one direction is supported in sobel_() now.");
+    let kernel = arr2(&[[-1.0, 0.0, 1.0], [-2.0, 0.0, 2.0], [-1.0, 0.0, 1.0]]);
+    if dx == 1 {
+        filter_(src, &kernel, border, out);
+    } else{
+        filter_(src, &kernel.t(), border, out);
+    }
+}
+
+/// Sobel operator implementation.
+///
+/// When kernel size is 3, the classical Sobel filter is applied. Read 
+/// [OpenCV Sobel()](https://docs.opencv.org/3.4/d4/d86/group__imgproc__filter.html#gacea54f142e81b6758cb6f375ce782c8d)
+/// for more details. Only `dx=1, dy=0` and `dx=0, dy=1` are supported now.
+///
+/// * `ksize`: the kernel size. Currently, only `ksize=3` is supported.
+/// * `dx`: order of the derivative x.
+/// * `dy`: order of the derivative y.
+/// * `border`: border type.
+pub fn sobel<S>(src: &ArrayBase<S, Ix2>, ksize: usize, dx: u32, dy: u32, border: BorderType) -> Array<f64, Ix2>
+    where S: Data<Elem=f64>
+{
+    let mut buffer = Array::zeros((src.shape()[0], src.shape()[1]));
+    sobel_(src, ksize, dx, dy, border, &mut buffer);
+    buffer
+}
+
+/// Get the norm of image processed by a Sobel operation.
+///
+/// Currently `norm=-1, 1, 2` are supported, where -1 means the infinty norm (max of absolute value). 
+/// This function can be used to obtain the edge of original image.
+///
+/// This function is implemented by `sobel()`. First order derivative of x and y direction are 
+/// used for computing the gradient.
+/// * `ksize`: the kernel size.
+/// * `norm`: the norm used for computation.
+/// * `border`: border type.
+
+pub fn sobel_norm<S>(src: &ArrayBase<S, Ix2>, ksize: usize, norm: i32, border: BorderType) -> Array<f64, Ix2>
+    where S: Data<Elem=f64>
+{
+    let gx = sobel(src, ksize, 1, 0, border);
+    let gy = sobel(src, ksize, 0, 1, border);
+    let gnorm = match norm {
+        2 => {
+            let t = gx.mapv(|x| x.powi(2)) + gy.mapv(|x| x.powi(2));
+            t.mapv(f64::sqrt)
+        }
+        1 => { gx.mapv(|x| x.abs()) + gy.mapv(|x| x.abs()) }
+        -1 => {
+            let mut buffer = Array::zeros((src.shape()[0], src.shape()[1]));
+            for x in 0..src.shape()[0] {
+                for y in 0..src.shape()[1] {
+                    buffer[[x, y]] = super::utils::max(gx[[x, y]].abs(), gy[[x, y]].abs());
+                }
+            }
+            buffer
+        }
+        _ => {
+            panic!(format!("Norm = {} is not supported by sobel_norm()!", norm));
+        }
+    };
+    gnorm
 }
