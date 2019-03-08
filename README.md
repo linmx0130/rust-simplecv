@@ -11,7 +11,7 @@ Make computer vision in Rust simpler!
 2. Simple values: all data are in `f64` type. Users does not need to care the problem lead by performing operations on u8 data.
 3. Simple dependency: use as few extern crates as possible so that it is simple to install and intergrate.
 
-## Example: Edge detection
+## Example: Edge Detection
 
 Simply four lines code to obtain the cover image (edge detection result) with Canny's edge detector!
 ```Rust
@@ -24,5 +24,5 @@ imsave_gray(&edge, "canny.png");                        // save image
 
 
 ## License
-This project is licensed by a BSD 3-caluse See LICENSE for details. 
+This project is licensed by a BSD 3-caluse. See LICENSE for details. 
 
