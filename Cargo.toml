@@ -9,4 +9,4 @@ description = "A simple computer vision library."
 [dependencies]
 image = "0.21.0"
 ndarray = "0.12.1"
-num = "*"
+num = "0.2.0"
