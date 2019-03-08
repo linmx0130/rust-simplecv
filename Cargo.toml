@@ -7,6 +7,6 @@ license = "BSD-3-Clause"
 description = "A simple computer vision library."
 
 [dependencies]
-image = {git="https://github.com/PistonDevelopers/image.git"} 
+image = "0.21.0"
 ndarray = "0.12.1"
 num = "*"
