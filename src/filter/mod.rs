@@ -296,3 +296,7 @@ pub fn sobel_norm<S>(src: &ArrayBase<S, Ix2>, ksize: usize, norm: i32, border: B
     };
     gnorm
 }
+
+pub mod canny;
+pub use canny::canny_edge;
+pub use canny::canny_edge_;
